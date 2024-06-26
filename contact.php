@@ -6,9 +6,20 @@ include 'header.php';
 
 //variables plour l'upload de fichier
 $targetDir = 'storage/';
-$targetFile = $targetDir . basename($_FILES['userFile']['name']);
+//Sert à remplacer le nom du fichier par le micro time afin de ne pas avoir de duplicatas 
+$temp = explode(".", $_FILES["userFile"]["name"]);
+$newFileName = (microtime(true)*10000) . '.' . end($temp);
+
+
+
+$targetFile = $targetDir . $newFileName;
 $uploadOk = 1;
 $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+if (file_exists($targetFile)) {
+    $fileErr = "Sorry, file already exists.";
+    $uploadOk = 0;
+}
 
 // initialise les variables avec des valeurs vides
 $civilityErr = $lastNameErr = $firstNameErr = $emailErr = $didYouSayFamilyErr = $familyErr = $fileErr = "";
@@ -68,7 +79,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     //----------------For file upload
 
-    // Permet l'upload des fichiers textes seulement
+
+    //Permet l'upload des fichiers textes seulement
     if($imageFileType != "txt") {
         $fileErr =  "Sorry, only TXT files are allowed.";
         $uploadOk = 0;
@@ -80,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $uploadOk = 0;
     }
 
-    // Limite la taille de l'image
+    // Limite la taille de l'texte
     if ($_FILES["userFile"]["size"] > 50000) {
         $fileErr = "Sorry, your file is too large.";
         $uploadOk = 0;
