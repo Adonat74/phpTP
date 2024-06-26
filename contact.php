@@ -4,8 +4,14 @@ $title = "Contact Family Page";
 $description = "Family, Contact, Family, Contact, Family, Contact, Family, Contact";
 include 'header.php';
 
+//variables plour l'upload de fichier
+$targetDir = 'storage/';
+$targetFile = $targetDir . basename($_FILES['userFile']['name']);
+$uploadOk = 1;
+$imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
 // initialise les variables avec des valeurs vides
-$civilityErr = $lastNameErr = $firstNameErr = $emailErr = $didYouSayFamilyErr = $familyErr = "";
+$civilityErr = $lastNameErr = $firstNameErr = $emailErr = $didYouSayFamilyErr = $familyErr = $fileErr = "";
 $civility = $lastName = $firstName = $email = $didYouSayFamily = $family = "";
 
 // fonction qui assainie les données des inputs grace au fonctions intégrées à php.
@@ -59,6 +65,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $family = testInput($_POST["family"]);
     }
+
+    //----------------For file upload
+
+    // Permet l'upload des fichiers textes seulement
+    if($imageFileType != "txt") {
+        $fileErr =  "Sorry, only TXT files are allowed.";
+        $uploadOk = 0;
+    }
+
+    // check si le fichier éxiste déjà
+    if (file_exists($targetFile)) {
+        $fileErr = "Sorry, file already exists.";
+        $uploadOk = 0;
+    }
+
+    // Limite la taille de l'image
+    if ($_FILES["userFile"]["size"] > 50000) {
+        $fileErr = "Sorry, your file is too large.";
+        $uploadOk = 0;
+    }
+
+    
+
+
+
+
 }
 
 // enregistre dans session un tableau de clé/valeurs 
@@ -83,8 +115,8 @@ $family = isset($_SESSION['formData']['family']) ? $_SESSION['formData']['family
 
 <main>
     <h1>Contact</h1>
-    
-    <form method="POST" action="index.php?page=contact">
+    <!-- enctype sert à l'upload de fichiers -->
+    <form enctype="multipart/form-data"  method="POST" action="index.php?page=contact">
 
         <label for="civility">civilité</label>
         <select name="civility" id="civility">
@@ -130,6 +162,17 @@ $family = isset($_SESSION['formData']['family']) ? $_SESSION['formData']['family
         </label>
         <span class="error">* <?php echo $familyErr;?></span>
         <br>
+        <br>
+        <br>
+
+        <input type="hidden" name="MAX_FILE_SIZE" value="30000" />
+        Envoyez ce fichier : <input name="userFile" type="file" />
+        <span class="error">* <?php echo $fileErr;?></span>
+
+        <br>
+        <br>
+        <br>
+
 
 
         <input class="formButton" type="submit" value="Envoyer">
@@ -144,8 +187,8 @@ $family = isset($_SESSION['formData']['family']) ? $_SESSION['formData']['family
 <?php 
 
 $isComplete = true;
-
-foreach ($_SESSION['formData'] as $key => $value) { // Changed to use foreach loop for better readability
+// sert à ne pas écrire dans le fichier.txt si des champs ne sont pas remplis
+foreach ($_SESSION['formData'] as $key => $value) {
     if (empty($value)) {
         $isComplete = false;
         break;
@@ -153,9 +196,17 @@ foreach ($_SESSION['formData'] as $key => $value) { // Changed to use foreach lo
 }
 
 
+
+if ($uploadOk == 1) {
+    move_uploaded_file($_FILES['userFile']['tmp_name'], $targetFile);
+    echo "SUCCESS!";
+}
+
+
+
 // sert à écrire les données des inputs dans un fichier.txt
 if ($isComplete) {
-    $formDataString = implode("\n", $_SESSION['formData']);// sert à séparer sauter des lignes. 
+    $formDataString = implode("\n", $_SESSION['formData']);// sert à séparer /sauter des lignes. 
     file_put_contents('fichier.txt', $formDataString);//FILE_APPEND permet d'ajouter et pas de remplacer les données
 }
 
